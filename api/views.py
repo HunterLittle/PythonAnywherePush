@@ -1,22 +1,52 @@
-from rest_framework import generics
-from .serializers import SkillSerializer
-from .models import Skill
+from rest_framework import status, generics
+from rest_framework.decorators import api_view
+from .serializers import *
+from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 
-# List all skills view - does not include create option
-class skillsList(generics.ListAPIView):
-    permission_classes = (AllowAny,)
-    queryset = Skill.objects.all()
-    serializer_class = SkillSerializer
+from django.contrib.auth.models import User
+from .serializers import RegisterSerializer
 
-# create a new skill view
-class skillsListCreate(generics.ListCreateAPIView):
-    permission_classes = (AllowAny,)
-    queryset = Skill.objects.all()
-    serializer_class = SkillSerializer
+@api_view(['GET', 'POST'])
+def movie_list(request):
+    if request.method == 'GET':
+        movies = Movie.objects.all()
+        serializer = MovieSerializer(movies, many=True)
+        return Response({'data': serializer.data})
 
-# retrieve, update, or destroy a skill
-class skillRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    elif request.method == 'POST':
+        serializer = MovieSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def getMovie(request, pk):
+    """
+    Retrieve, update or delete a movie instance.
+    """
+    try:
+        movie = Movie.objects.get(pk=pk)
+    except Movie.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = MovieSerializer(movie)
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        serializer = MovieSerializer(movie, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        movie.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
     permission_classes = (AllowAny,)
-    queryset = Skill.objects.all()
-    serializer_class = SkillSerializer
+    serializer_class = RegisterSerializer
