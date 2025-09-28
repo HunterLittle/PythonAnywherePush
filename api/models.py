@@ -5,6 +5,7 @@ class Movie(models.Model):
     description = models.TextField(max_length=360)
     year = models.IntegerField(blank=False, null=False)
     rating = models.IntegerField(blank=False, null=False)
+    director = models.TextField(max_length=360, default="")
     created_date = models.DateTimeField(default=timezone.now)
     updated_date = models.DateTimeField(auto_now_add=True)
     movie_image = models.ImageField(upload_to='movie_pictures/', blank=True, null=True)
